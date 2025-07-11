@@ -26,7 +26,11 @@
        echo 'Uma string pode usar "aspas-duplas". Isso é muito legal! <br>';
        echo 'Ainda pode se usar aspas simples dessa forma: It\'s cool! <br>';
     ?>
-    
-  
+     <?php 
+ 
+    ?>
+   <adress>
+      <p  align="center"> Raquel Fernandes / Estudante / raquel_f_brito@estudante.sesisenai.org.br</p>
+</adress>
 </body>
 </html>

@@ -23,6 +23,8 @@
     <p>Ocorrência: <?php echo $index; ?></p> <!-- Imprimiu a primeira ocorrencia de e, ou seja, "stE"-->
     <p>Substring: <?php echo $first; ?></p> <!-- Imprimiu a substring de 5 caracteres a partir do caractere 9, que é um H, então resulta em  H,A,T,C,H - 5 caracteres -->
     <p>Maiúsculas: <?php echo $name; ?></p> <!-- Imprimiu o nome todo em maiúsculas, ou seja, STEFANIE HATCHER -->
-
+ <adress>
+      <p  align="center"> Raquel Fernandes / Estudante / raquel_f_brito@estudante.sesisenai.org.br</p>
+</adress>
 </body>
 </html>

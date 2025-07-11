@@ -13,6 +13,12 @@
         $data_hoje  = date("d/m/Y", time());
     ?>
     <p align="center"> Hoje é dia <?php echo $data_hoje; ?> </p>
+    <?php 
+    
+    ?>
+     <adress>
+      <p  align="center"> Raquel Fernandes / Estudante / raquel_f_brito@estudante.sesisenai.org.br</p>
+</adress>
 
 </body>
 </html>

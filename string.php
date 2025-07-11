@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="PT-BR">
+<html lang="PT-BR">00,3020
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,8 +27,11 @@
     # --------STRINGS INTERPRETADAS --------
     $age = 16; // Definindo a variável $age com o valor 16
     print "Hoje é o seu $ageth aniversário <br>"; // por não haver a variável $ageth definida, ele não interpretará e só aparecerá "Hoje é o seu th aniversário"
-    print "Hoje é o seu ($age) th birthday <br>";    // por não haver a variável $ageth definida, ele não interpretará e só aparecerá "Hoje é o seu (16) th birthday"
+    print "Hoje é o seu ($age) th birthday <br>"; 
+    echo "<br><br>Raquel Fernandes"   // por não haver a variável $ageth definida, ele não interpretará e só aparecerá "Hoje é o seu (16) th birthday"
 ?>
-
+ <adress>
+      <p  align="center"> Raquel Fernandes / Estudante / raquel_f_brito@estudante.sesisenai.org.br</p>
+</adress>
 </body>
 </html>

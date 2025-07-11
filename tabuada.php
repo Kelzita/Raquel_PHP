@@ -1,19 +1,23 @@
 <!DOCTYPE html>
-<html lang="PT-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exemplo 1 - primeiro programa de php</title>
+    <title>TABUADAS</title>
 </head>
 <body>
-    <?php 
-       echo "<h1>Hello World, PHP-7!</h1>"; # Hello World em PHP, 
-       phpinfo(); // Exibe informações sobre a instalação do PHP
-   
+    <h1> Tabuada de Multiplicação </h1>
+    <?php  
+       for($i = 0; $i < 11; $i++) {
+       for($m = 0; $m <11; $m++) {
+          print("{$i} x {$m} = " .$i * $m."<br><br>");
+       }
+       print("<hr>");
+       }
     ?>
      <adress>
       <p  align="center"> Raquel Fernandes / Estudante / raquel_f_brito@estudante.sesisenai.org.br</p>
 </adress>
+    
 </body>
 </html>
-                
