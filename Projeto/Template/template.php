@@ -49,11 +49,14 @@
             <th>Prioridade</th>
             <th>Concluída</th>
         </tr>
-        <?php foreach ($lista_tarefas as $tarefa): ?>
-        <tr>
-           <td><?php echo $tarefa; ?> </td>
+        <?php foreach ($lista_tarefas as $tarefa) : ?>
+        <tr>   
+           <td><?php echo $tarefa['nome']; ?> </td>
+           <td><?php echo $tarefa['descricao']; ?> </td>
+           <td><?php echo $tarefa['prazo']; ?> </td>
+           <td><?php echo $tarefa['prioridade']; ?> </td>
+           <td><?php echo $tarefa['concluido']; ?> </td>
         </tr>
-
         <?php endforeach; ?>
         
     </table>
