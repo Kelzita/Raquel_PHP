@@ -1,5 +1,6 @@
 <?php 
 session_start(); 
+ include "banco.php";
 
 if(isset($_GET['nome']) && $_GET['nome'] != '') {
     $tarefa = array();
@@ -24,14 +25,18 @@ if(isset($_GET['concluida'])) {
 } else {
     $tarefa['concluida'] = '';
 }
-$_SESSION['lista_tarefas'][] = $tarefa; 
+//$_SESSION['lista_tarefas'][] = $tarefa; 
+gravar_tarefa($conexao, $tarefa);
+}
+$lista_tarefas = buscar_tarefas($conexao);
 
-}
-if(array_key_exists('lista_tarefas', $_SESSION)) {
-    $lista_tarefas = $_SESSION['lista_tarefas']; 
-} else {
-    $lista_tarefas = []; 
-}
+include "template.php"
+
+//PARTE DELETADA:
+//if(array_key_exists('lista_tarefas', $_SESSION)) {
+  //  $lista_tarefas = $_SESSION['lista_tarefas']; 
+//} else {
+   // $lista_tarefas = []; 
+//}
 //session_destroy(); 0
-include "template.php";
 ?>

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="PT-BR">
 <head>
@@ -28,9 +29,9 @@
         <label>
             <input type="radio" name="prioridade" value="baixa" checked />
             Baixa 
-            <input type="radio" name="prioridade" value="media" checked />
+            <input type="radio" name="prioridade" value="media" />
             Média 
-            <input type="radio" name="prioridade" value="alta" checked />
+            <input type="radio" name="prioridade" value="alta"  />
             Alta
         </label>
     </fieldset>
@@ -41,7 +42,8 @@
     <input type="submit" value="Cadastrar"/>
 </fieldset>
   </form>
-    <table>
+  <br><br>
+    <table align="center" border="1" cellpadding="10" cellspacing="0">
         <tr>
             <th>Tarefas</th>
             <th>Descrição</th>
@@ -55,7 +57,7 @@
            <td><?php echo $tarefa['descricao']; ?> </td>
            <td><?php echo $tarefa['prazo']; ?> </td>
            <td><?php echo $tarefa['prioridade']; ?> </td>
-           <td><?php echo $tarefa['concluido']; ?> </td>
+           <td><?php echo $tarefa['concluida']; ?> </td>
         </tr>
         <?php endforeach; ?>
         
