@@ -1,5 +1,5 @@
 <?php 
-//PDO :)
+//PDO :) - BackEnd do Listar Cliente
 require 'conexao.php';
 
 $conexao = conectarBanco();
@@ -32,7 +32,7 @@ $clientes = $stmt -> fetchAll();
                 <td><?=htmlspecialchars($cliente["nome"]) ?></td>
                 <td><?=htmlspecialchars($cliente["endereco"]) ?></td>
                 <td><?=htmlspecialchars($cliente["telefone"]) ?></td>
-                <td><?=htmlspecialchars($cliente["email"]) ?></td>
+                <td><?=htmlspecialchars($cliente["email"]) ?></td> <!-- = htmlspecialchars: Evita probelmas de segurança ao exibir dados -->
         </tr>
         <?php endforeach; ?>
 </table>
