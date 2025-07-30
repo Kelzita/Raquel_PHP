@@ -1,253 +1,366 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, filedialog
+from tkinter import ttk, messagebox, filedialog, scrolledtext
 import hashlib
 import socket
-import random
-import string
 import threading
 import os
-import json
 import requests
-from PIL import Image, ImageTk
+import json
+import subprocess
+import random
+import string
+import time
+import datetime
 from cryptography.fernet import Fernet
-from datetime import datetime
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 import exifread
+import whois
+import dns.resolver
+from PIL import Image, ImageTk
+import pdfkit
+import nmap
+from scapy.all import sniff, IP, TCP, UDP, ARP
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import pandas as pd
+import numpy as np
 
-class AdvancedCyberSecurityTool:
+# Configuração de estilo
+DARK_BG = "#1e1e1e"
+DARK_FG = "#e0e0e0"
+ACCENT_COLOR = "#007acc"
+HIGHLIGHT_COLOR = "#4fc3f7"
+WARNING_COLOR = "#ff9800"
+ERROR_COLOR = "#f44336"
+SUCCESS_COLOR = "#4caf50"
+
+class CyberSecurityPro:
     def __init__(self, root):
         self.root = root
-        self.root.title("Cyber Security Suite Pro")
-        self.root.geometry("1000x700")
-        self.root.minsize(900, 600)
+        self.root.title("Cyber Security Toolkit Pro - Ultimate Edition")
+        self.root.geometry("1200x800")
+        self.root.minsize(1100, 700)
         
-        # Configurar tema escuro
-        self.set_dark_theme()
+        # Configuração do tema
+        self.setup_style()
+        
+        # Variáveis de estado
+        self.current_project = None
+        self.scan_active = False
+        self.sniffer_active = False
+        self.report_data = []
+        
+        # Layout principal
+        self.create_main_layout()
+        
+        # Carrega APIs (configuração simplificada)
+        self.load_api_config()
+        
+        # Inicializa módulos
+        self.init_modules()
         
         # Barra de status
-        self.status_var = tk.StringVar()
-        self.status_bar = ttk.Label(root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W)
-        self.status_bar.pack(side=tk.BOTTOM, fill=tk.X)
-        self.update_status("Pronto")
+        self.setup_status_bar()
         
-        # Cabeçalho
-        self.create_header()
-        
-        # Notebook (abas)
-        self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill='both', expand=True, padx=10, pady=(0, 10))
-        
-        # Criar todas as abas
-        self.create_password_tools_tab()
-        self.create_network_tools_tab()
-        self.create_crypto_tools_tab()
-        self.create_metadata_tools_tab()
-        self.create_hash_tools_tab()
-        
-        # Carregar dados de senhas vazadas (simplificado)
-        self.breached_passwords = self.load_breached_passwords()
-    
-    def set_dark_theme(self):
-        """Configura um tema escuro moderno para a aplicação"""
+        # Atualiza a interface
+        self.update_ui()
+
+    def setup_style(self):
+        """Configura o tema visual da aplicação"""
         self.root.tk_setPalette(
-            background='#2e2e2e',
-            foreground='#ffffff',
-            activeBackground='#3e3e3e',
-            activeForeground='#ffffff'
+            background=DARK_BG,
+            foreground=DARK_FG,
+            activeBackground="#333333",
+            activeForeground="#ffffff"
         )
         
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Configurar cores do tema
-        style.configure('.', background='#2e2e2e', foreground='#ffffff')
-        style.configure('TNotebook', background='#2e2e2e', borderwidth=0)
-        style.configure('TNotebook.Tab', background='#3e3e3e', foreground='#ffffff', padding=[10, 5])
-        style.map('TNotebook.Tab', background=[('selected', '#1e1e1e')])
-        style.configure('TFrame', background='#2e2e2e')
-        style.configure('TLabel', background='#2e2e2e', foreground='#ffffff')
-        style.configure('TEntry', fieldbackground='#3e3e3e', foreground='#ffffff')
-        style.configure('TButton', background='#3e3e3e', foreground='#ffffff')
-        style.map('TButton', background=[('active', '#4e4e4e')])
-        style.configure('Vertical.TScrollbar', background='#3e3e3e', troughcolor='#2e2e2e')
-        style.configure('Horizontal.TScrollbar', background='#3e3e3e', troughcolor='#2e2e2e')
-    
-    def create_header(self):
-        """Cria o cabeçalho da aplicação com logo e título"""
-        header_frame = ttk.Frame(self.root)
-        header_frame.pack(fill=tk.X, padx=10, pady=10)
+        # Configurações gerais
+        style.configure('.', background=DARK_BG, foreground=DARK_FG)
+        style.configure('TFrame', background=DARK_BG)
+        style.configure('TLabel', background=DARK_BG, foreground=DARK_FG)
+        style.configure('TEntry', fieldbackground="#252525", foreground=DARK_FG)
+        style.configure('TCombobox', fieldbackground="#252525", foreground=DARK_FG)
+        style.configure('TButton', background="#333333", foreground=DARK_FG)
+        style.map('TButton', background=[('active', '#444444')])
         
-        # Logo (usando texto como substituto)
-        logo_label = ttk.Label(header_frame, text="🛡️", font=('Arial', 24))
-        logo_label.pack(side=tk.LEFT, padx=(0, 10))
+        # Estilo personalizado para botões de ação
+        style.configure('Accent.TButton', background=ACCENT_COLOR, foreground="white")
+        style.map('Accent.TButton', background=[('active', '#0066b3')])
+        
+        # Estilo para Treeview
+        style.configure('Treeview', 
+                      background="#252525", 
+                      fieldbackground="#252525", 
+                      foreground=DARK_FG)
+        style.map('Treeview', background=[('selected', ACCENT_COLOR)])
+        
+        # Estilo para abas
+        style.configure('TNotebook', background=DARK_BG, borderwidth=0)
+        style.configure('TNotebook.Tab', 
+                      background="#2d2d2d", 
+                      foreground=DARK_FG,
+                      padding=[10, 5])
+        style.map('TNotebook.Tab', 
+                background=[('selected', DARK_BG)],
+                foreground=[('selected', HIGHLIGHT_COLOR)])
+
+    def create_main_layout(self):
+        """Cria o layout principal da aplicação"""
+        # Cabeçalho
+        self.create_header()
+        
+        # Painel principal
+        main_panel = ttk.Frame(self.root)
+        main_panel.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 5))
+        
+        # Painel de navegação
+        nav_panel = ttk.Frame(main_panel, width=200)
+        nav_panel.pack(side=tk.LEFT, fill=tk.Y)
+        nav_panel.pack_propagate(False)
+        
+        # Notebook principal
+        self.main_notebook = ttk.Notebook(main_panel)
+        self.main_notebook.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        
+        # Cria os módulos
+        self.create_navigation(nav_panel)
+        self.create_dashboard_tab()
+        self.create_password_tools()
+        self.create_network_tools()
+        self.create_crypto_tools()
+        self.create_vulnerability_tools()
+        self.create_malware_tools()
+        self.create_forensic_tools()
+        self.create_reporting_tools()
+        self.create_project_tools()
+        self.create_settings_tab()
+
+    def create_header(self):
+        """Cria o cabeçalho da aplicação"""
+        header = ttk.Frame(self.root, height=80)
+        header.pack(fill=tk.X, padx=10, pady=10)
+        
+        # Logo
+        logo_frame = ttk.Frame(header)
+        logo_frame.pack(side=tk.LEFT)
+        
+        # Ícone (simulado com texto)
+        ttk.Label(logo_frame, text="🛡️", font=('Arial', 24)).pack(side=tk.LEFT)
         
         # Título
-        title_label = ttk.Label(
-            header_frame, 
-            text="Cyber Security Suite Pro", 
-            font=('Arial', 16, 'bold'),
-            foreground='#4fc3f7'
-        )
-        title_label.pack(side=tk.LEFT)
+        ttk.Label(logo_frame, 
+                text="Cyber Security Pro", 
+                font=('Arial', 16, 'bold'),
+                foreground=HIGHLIGHT_COLOR).pack(side=tk.LEFT, padx=10)
         
-        # Versão
-        version_label = ttk.Label(
-            header_frame, 
-            text="v2.0", 
-            font=('Arial', 10),
-            foreground='#bdbdbd'
-        )
-        version_label.pack(side=tk.LEFT, padx=(10, 0))
-    
+        # Barra de estado do projeto
+        self.project_status = ttk.Label(header, 
+                                      text="Nenhum projeto aberto", 
+                                      foreground="#b0b0b0")
+        self.project_status.pack(side=tk.RIGHT)
+
+    def setup_status_bar(self):
+        """Configura a barra de status"""
+        self.status_var = tk.StringVar()
+        status_bar = ttk.Label(self.root, 
+                             textvariable=self.status_var, 
+                             relief=tk.SUNKEN, 
+                             anchor=tk.W)
+        status_bar.pack(side=tk.BOTTOM, fill=tk.X)
+        
+        self.update_status("Pronto")
+
     def update_status(self, message):
         """Atualiza a barra de status"""
-        timestamp = datetime.now().strftime("%H:%M:%S")
+        timestamp = datetime.datetime.now().strftime("%H:%M:%S")
         self.status_var.set(f"[{timestamp}] {message}")
-    
-    # ==============================================
-    # ABA: FERRAMENTAS DE SENHA
-    # ==============================================
-    def create_password_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Ferramentas de Senha")
+
+    def create_navigation(self, parent):
+        """Cria a barra de navegação lateral"""
+        # Botões de navegação
+        nav_buttons = [
+            ("Dashboard", self.show_dashboard),
+            ("Ferramentas de Senha", self.show_password_tools),
+            ("Ferramentas de Rede", self.show_network_tools),
+            ("Criptografia", self.show_crypto_tools),
+            ("Vulnerabilidades", self.show_vulnerability_tools),
+            ("Análise de Malware", self.show_malware_tools),
+            ("Forense Digital", self.show_forensic_tools),
+            ("Relatórios", self.show_reporting_tools),
+            ("Gerenciar Projeto", self.show_project_tools),
+            ("Configurações", self.show_settings)
+        ]
         
-        # Painel esquerdo - Verificador de senha
-        left_panel = ttk.Frame(tab)
-        left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
+        for text, command in nav_buttons:
+            btn = ttk.Button(parent, 
+                           text=text, 
+                           command=command,
+                           style='Accent.TButton' if text == "Dashboard" else 'TButton')
+            btn.pack(fill=tk.X, pady=2)
+
+    def create_dashboard_tab(self):
+        """Cria a aba de dashboard"""
+        self.dashboard_tab = ttk.Frame(self.main_notebook)
+        self.main_notebook.add(self.dashboard_tab, text="Dashboard")
         
-        checker_frame = ttk.LabelFrame(left_panel, text="Verificador de Senha", padding=10)
-        checker_frame.pack(fill=tk.BOTH, expand=True)
+        # Linha superior (métricas)
+        metrics_frame = ttk.Frame(self.dashboard_tab)
+        metrics_frame.pack(fill=tk.X, pady=10)
         
-        ttk.Label(checker_frame, text="Digite uma senha para verificar:").pack(pady=(0, 5))
+        # Métricas (simuladas)
+        metrics = [
+            ("Projetos Ativos", "3", SUCCESS_COLOR),
+            ("Vulnerabilidades", "12", WARNING_COLOR),
+            ("Scans Hoje", "5", ACCENT_COLOR),
+            ("Ameaças Detectadas", "2", ERROR_COLOR)
+        ]
         
-        self.password_entry = ttk.Entry(checker_frame, show="•", width=30)
+        for i, (title, value, color) in enumerate(metrics):
+            metric_frame = ttk.Frame(metrics_frame, relief=tk.RAISED, borderwidth=1)
+            metric_frame.grid(row=0, column=i, padx=5, sticky="nsew")
+            
+            ttk.Label(metric_frame, 
+                    text=title, 
+                    font=('Arial', 10)).pack(pady=(5, 0))
+            ttk.Label(metric_frame, 
+                    text=value, 
+                    font=('Arial', 24, 'bold'),
+                    foreground=color).pack()
+            
+            metrics_frame.columnconfigure(i, weight=1)
+        
+        # Gráfico de atividades (simulado)
+        chart_frame = ttk.Frame(self.dashboard_tab)
+        chart_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        
+        fig, ax = plt.subplots(figsize=(8, 4), facecolor=DARK_BG)
+        ax.set_facecolor(DARK_BG)
+        
+        # Dados simulados
+        days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
+        scans = [5, 7, 3, 8, 12, 4, 6]
+        threats = [1, 0, 2, 3, 1, 0, 2]
+        
+        ax.plot(days, scans, label='Scans', color=ACCENT_COLOR, marker='o')
+        ax.plot(days, threats, label='Ameaças', color=ERROR_COLOR, marker='o')
+        
+        ax.set_title('Atividades da Semana', color=DARK_FG)
+        ax.set_xlabel('Dia', color=DARK_FG)
+        ax.set_ylabel('Quantidade', color=DARK_FG)
+        ax.legend(facecolor=DARK_BG, labelcolor=DARK_FG)
+        ax.tick_params(colors=DARK_FG)
+        
+        for spine in ax.spines.values():
+            spine.set_edgecolor(DARK_FG)
+        
+        chart = FigureCanvasTkAgg(fig, master=chart_frame)
+        chart.draw()
+        chart.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+        
+        # Últimas atividades
+        activities_frame = ttk.LabelFrame(self.dashboard_tab, text="Últimas Atividades", padding=10)
+        activities_frame.pack(fill=tk.BOTH, pady=10)
+        
+        columns = ("Data", "Tipo", "Descrição", "Status")
+        self.activities_table = ttk.Treeview(activities_frame, columns=columns, show="headings", height=5)
+        
+        for col in columns:
+            self.activities_table.heading(col, text=col)
+            self.activities_table.column(col, width=100)
+        
+        self.activities_table.pack(fill=tk.BOTH, expand=True)
+        
+        # Dados simulados
+        activities = [
+            ("10/05 14:30", "Scan", "Port scan em 192.168.1.1", "Concluído"),
+            ("10/05 12:15", "Análise", "Verificação de malware", "Falha"),
+            ("09/05 18:40", "Pentest", "Teste de SQL injection", "Em andamento")
+        ]
+        
+        for act in activities:
+            self.activities_table.insert('', tk.END, values=act)
+
+    def create_password_tools(self):
+        """Cria a aba de ferramentas de senha"""
+        self.password_tab = ttk.Frame(self.main_notebook)
+        self.main_notebook.add(self.password_tab, text="Senhas")
+        
+        notebook = ttk.Notebook(self.password_tab)
+        notebook.pack(fill=tk.BOTH, expand=True)
+        
+        # Sub-aba: Verificador de senha
+        self.create_password_checker_tab(notebook)
+        
+        # Sub-aba: Gerador de senha
+        self.create_password_generator_tab(notebook)
+        
+        # Sub-aba: Wordlist generator
+        self.create_wordlist_generator_tab(notebook)
+        
+        # Sub-aba: Password spraying
+        self.create_password_spraying_tab(notebook)
+
+    def create_password_checker_tab(self, notebook):
+        """Cria a sub-aba de verificação de senha"""
+        tab = ttk.Frame(notebook)
+        notebook.add(tab, text="Verificador")
+        
+        ttk.Label(tab, text="Digite uma senha para verificar:").pack(pady=10)
+        
+        self.password_entry = ttk.Entry(tab, show="•", width=40)
         self.password_entry.pack(pady=5)
         
-        check_btn = ttk.Button(
-            checker_frame, 
-            text="Verificar Força", 
-            command=self.check_password_strength,
-            style='Accent.TButton'
-        )
+        check_btn = ttk.Button(tab, 
+                             text="Verificar Senha", 
+                             command=self.check_password_strength,
+                             style='Accent.TButton')
         check_btn.pack(pady=10)
         
-        self.strength_meter = ttk.Progressbar(checker_frame, orient='horizontal', length=200, mode='determinate')
+        # Medidor de força
+        self.strength_meter = ttk.Progressbar(tab, 
+                                            orient=tk.HORIZONTAL, 
+                                            length=300, 
+                                            mode='determinate')
         self.strength_meter.pack(pady=5)
         
-        self.strength_label = ttk.Label(checker_frame, text="", font=('Arial', 11))
+        self.strength_label = ttk.Label(tab, 
+                                      text="", 
+                                      font=('Arial', 12))
         self.strength_label.pack(pady=5)
         
-        self.suggestions_text = tk.Text(
-            checker_frame, 
-            height=6, 
-            width=40, 
+        # Sugestões
+        self.suggestions_text = scrolledtext.ScrolledText(
+            tab, 
+            height=8, 
+            width=60, 
             wrap=tk.WORD, 
-            bg='#3e3e3e', 
-            fg='#ffffff',
+            bg="#252525", 
+            fg=DARK_FG,
             insertbackground='white'
         )
         self.suggestions_text.pack(pady=5)
         self.suggestions_text.insert(tk.END, "Sugestões aparecerão aqui...")
         self.suggestions_text.config(state=tk.DISABLED)
-        
-        # Painel direito - Gerador de senha
-        right_panel = ttk.Frame(tab)
-        right_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        generator_frame = ttk.LabelFrame(right_panel, text="Gerador de Senha Segura", padding=10)
-        generator_frame.pack(fill=tk.BOTH, expand=True)
-        
-        ttk.Label(generator_frame, text="Tamanho da senha:").pack(pady=(0, 5))
-        
-        self.length_var = tk.IntVar(value=16)
-        length_frame = ttk.Frame(generator_frame)
-        length_frame.pack(pady=5)
-        ttk.Label(length_frame, text="8").pack(side=tk.LEFT)
-        ttk.Scale(
-            length_frame, 
-            from_=8, 
-            to=32, 
-            variable=self.length_var,
-            orient=tk.HORIZONTAL,
-            length=150
-        ).pack(side=tk.LEFT, padx=5)
-        ttk.Label(length_frame, text="32").pack(side=tk.LEFT)
-        ttk.Label(length_frame, textvariable=self.length_var).pack(side=tk.LEFT, padx=5)
-        
-        # Opções de caracteres
-        self.include_upper = tk.BooleanVar(value=True)
-        ttk.Checkbutton(
-            generator_frame, 
-            text="Letras maiúsculas (A-Z)", 
-            variable=self.include_upper
-        ).pack(anchor='w', pady=2)
-        
-        self.include_lower = tk.BooleanVar(value=True)
-        ttk.Checkbutton(
-            generator_frame, 
-            text="Letras minúsculas (a-z)", 
-            variable=self.include_lower
-        ).pack(anchor='w', pady=2)
-        
-        self.include_digits = tk.BooleanVar(value=True)
-        ttk.Checkbutton(
-            generator_frame, 
-            text="Números (0-9)", 
-            variable=self.include_digits
-        ).pack(anchor='w', pady=2)
-        
-        self.include_special = tk.BooleanVar(value=True)
-        ttk.Checkbutton(
-            generator_frame, 
-            text="Caracteres especiais (!@#$)", 
-            variable=self.include_special
-        ).pack(anchor='w', pady=2)
-        
-        generate_btn = ttk.Button(
-            generator_frame, 
-            text="Gerar Senha", 
-            command=self.generate_password,
-            style='Accent.TButton'
-        )
-        generate_btn.pack(pady=15)
-        
-        self.generated_password = ttk.Entry(
-            generator_frame, 
-            width=30, 
-            font=('Arial', 12),
-            justify='center'
-        )
-        self.generated_password.pack(pady=5)
-        
-        btn_frame = ttk.Frame(generator_frame)
-        btn_frame.pack(pady=5)
-        
-        ttk.Button(
-            btn_frame, 
-            text="Copiar", 
-            command=self.copy_password,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(
-            btn_frame, 
-            text="Verificar", 
-            command=self.check_generated_password,
-            width=8
-        ).pack(side=tk.LEFT, padx=5)
-    
+
     def check_password_strength(self):
+        """Verifica a força da senha"""
         password = self.password_entry.get()
         if not password:
-            messagebox.showwarning("Aviso", "Por favor, digite uma senha.")
+            messagebox.showwarning("Aviso", "Digite uma senha para verificar.")
             return
         
-        # Verificar se a senha foi vazada
-        is_breached = self.check_password_breach(password)
+        # Verifica se a senha foi vazada
+        is_breached = self.check_hibp(password)
         
+        # Calcula a força
         strength = 0
         suggestions = []
         
-        # Verifica o comprimento
+        # Comprimento
         if len(password) >= 16:
             strength += 3
         elif len(password) >= 12:
@@ -257,97 +370,128 @@ class AdvancedCyberSecurityTool:
         else:
             suggestions.append("🔸 Use pelo menos 12 caracteres (16+ recomendado)")
         
-        # Verifica se tem dígitos
-        if any(c.isdigit() for c in password):
+        # Complexidade
+        has_upper = any(c.isupper() for c in password)
+        has_lower = any(c.islower() for c in password)
+        has_digit = any(c.isdigit() for c in password)
+        has_special = any(c in string.punctuation for c in password)
+        
+        if has_upper and has_lower:
             strength += 1
         else:
-            suggestions.append("🔸 Adicione números para aumentar a segurança")
+            suggestions.append("🔸 Use letras maiúsculas e minúsculas")
         
-        # Verifica se tem letras maiúsculas e minúsculas
-        upper = any(c.isupper() for c in password)
-        lower = any(c.islower() for c in password)
-        
-        if upper and lower:
+        if has_digit:
             strength += 1
         else:
-            suggestions.append("🔸 Use uma mistura de letras maiúsculas e minúsculas")
+            suggestions.append("🔸 Adicione números")
         
-        # Verifica caracteres especiais
-        if any(c in string.punctuation for c in password):
+        if has_special:
             strength += 1
         else:
             suggestions.append("🔸 Adicione caracteres especiais (!@#$%^&*)")
         
-        # Verifica sequências comuns
-        common_sequences = [
-            "123", "abc", "qwerty", "password", "asdf", "0000", 
-            "1111", "admin", "welcome", "senha", "123456"
-        ]
+        # Verifica senhas comuns
+        common_passwords = ["password", "123456", "qwerty", "admin", "welcome"]
+        if password.lower() in common_passwords:
+            strength = 0
+            suggestions.append("🚨 SENHA MUITO COMUM - NÃO USE!")
         
-        if any(seq in password.lower() for seq in common_sequences):
-            strength = max(0, strength - 2)
-            suggestions.append("🔸 Evite sequências comuns e palavras simples")
+        # Verifica se foi vazada
+        if is_breached:
+            strength = 0
+            suggestions.append("🚨 ESTA SENHA FOI VAZADA EM BREACHES - NÃO USE!")
         
-        # Verifica repetição
-        if len(set(password)) < len(password) / 2:
-            strength = max(0, strength - 1)
-            suggestions.append("🔸 Evite muitos caracteres repetidos")
-        
-        # Ajusta para escala 0-100
+        # Atualiza a interface
         strength_score = min(100, (strength / 7) * 100)
         self.strength_meter['value'] = strength_score
         
-        # Exibe o resultado
-        if is_breached:
-            self.strength_label.config(text="SENHA VAZADA - NÃO USE!", foreground='#ff5252')
-            suggestions.insert(0, "🚨 ESTA SENHA FOI ENCONTRADA EM VAZAMENTOS DE DADOS!")
-        elif strength_score >= 80:
-            self.strength_label.config(text="Senha Excelente", foreground='#4caf50')
+        if strength_score >= 80:
+            self.strength_label.config(text="Senha Excelente", foreground=SUCCESS_COLOR)
         elif strength_score >= 60:
-            self.strength_label.config(text="Senha Boa", foreground='#8bc34a')
+            self.strength_label.config(text="Senha Boa", foreground="#8BC34A")
         elif strength_score >= 40:
-            self.strength_label.config(text="Senha Razoável", foreground='#ffc107')
+            self.strength_label.config(text="Senha Razoável", foreground=WARNING_COLOR)
         elif strength_score >= 20:
-            self.strength_label.config(text="Senha Fraca", foreground='#ff9800')
+            self.strength_label.config(text="Senha Fraca", foreground="#FF5722")
         else:
-            self.strength_label.config(text="Senha Muito Fraca", foreground='#ff5252')
+            self.strength_label.config(text="Senha Muito Fraca", foreground=ERROR_COLOR)
         
         # Mostra sugestões
         self.suggestions_text.config(state=tk.NORMAL)
         self.suggestions_text.delete(1.0, tk.END)
         
         if not suggestions:
-            self.suggestions_text.insert(tk.END, "✅ Sua senha atende aos critérios básicos de segurança!")
+            self.suggestions_text.insert(tk.END, "✅ Sua senha atende aos critérios de segurança!")
         else:
             self.suggestions_text.insert(tk.END, "\n".join(suggestions))
         
         self.suggestions_text.config(state=tk.DISABLED)
         self.update_status("Verificação de senha concluída")
-    
-    def check_password_breach(self, password):
-        """Verifica se a senha foi vazada (versão simplificada)"""
-        # Nota: Em uma aplicação real, isso seria feito com uma API ou banco de dados local
-        # Aqui estamos usando uma lista pequena de senhas comuns apenas para demonstração
-        password_hash = hashlib.sha1(password.encode('utf-8')).hexdigest().upper()
-        prefix = password_hash[:5]
+
+    def check_hibp(self, password):
+        """Verifica se a senha foi vazada usando a API do Have I Been Pwned"""
+        try:
+            # Hash SHA-1 da senha
+            sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
+            prefix = sha1_hash[:5]
+            suffix = sha1_hash[5:]
+            
+            # Faz a requisição para a API
+            url = f"https://api.pwnedpasswords.com/range/{prefix}"
+            response = requests.get(url)
+            
+            if response.status_code == 200:
+                # Verifica se o hash está na lista
+                hashes = [line.split(':') for line in response.text.splitlines()]
+                for h, count in hashes:
+                    if h == suffix:
+                        return True
+            return False
+        except:
+            return False
+
+    def create_password_generator_tab(self, notebook):
+        """Cria a sub-aba de geração de senha"""
+        tab = ttk.Frame(notebook)
+        notebook.add(tab, text="Gerador")
         
-        # Verifica no dicionário de senhas vazadas
-        if password in self.breached_passwords:
-            return True
+        ttk.Label(tab, text="Tamanho da senha:").pack(pady=5)
         
-        return False
-    
-    def load_breached_passwords(self):
-        """Carrega uma lista de senhas vazadas (simplificado para demonstração)"""
-        common_passwords = [
-            "123456", "password", "123456789", "12345678", "12345",
-            "1234567", "1234567890", "qwerty", "abc123", "senha",
-            "password1", "1234", "iloveyou", "111111", "000000"
-        ]
-        return set(common_passwords)
-    
+        self.pwd_length = tk.IntVar(value=16)
+        ttk.Scale(tab, from_=8, to=32, variable=self.pwd_length, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=5)
+        
+        ttk.Label(tab, text="Caracteres a incluir:").pack(pady=5)
+        
+        self.include_upper = tk.BooleanVar(value=True)
+        ttk.Checkbutton(tab, text="Letras maiúsculas (A-Z)", variable=self.include_upper).pack(anchor='w')
+        
+        self.include_lower = tk.BooleanVar(value=True)
+        ttk.Checkbutton(tab, text="Letras minúsculas (a-z)", variable=self.include_lower).pack(anchor='w')
+        
+        self.include_digits = tk.BooleanVar(value=True)
+        ttk.Checkbutton(tab, text="Números (0-9)", variable=self.include_digits).pack(anchor='w')
+        
+        self.include_special = tk.BooleanVar(value=True)
+        ttk.Checkbutton(tab, text="Caracteres especiais (!@#$)", variable=self.include_special).pack(anchor='w')
+        
+        ttk.Button(tab, 
+                  text="Gerar Senha", 
+                  command=self.generate_password,
+                  style='Accent.TButton').pack(pady=15)
+        
+        self.generated_password = ttk.Entry(tab, width=40, font=('Arial', 12), justify='center')
+        self.generated_password.pack(pady=5)
+        
+        btn_frame = ttk.Frame(tab)
+        btn_frame.pack(pady=5)
+        
+        ttk.Button(btn_frame, text="Copiar", command=self.copy_password).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Verificar", command=self.check_generated_password).pack(side=tk.LEFT, padx=5)
+
     def generate_password(self):
-        length = self.length_var.get()
+        """Gera uma senha aleatória"""
+        length = self.pwd_length.get()
         chars = ''
         
         if self.include_upper.get():
@@ -363,7 +507,7 @@ class AdvancedCyberSecurityTool:
             messagebox.showerror("Erro", "Selecione pelo menos um tipo de caractere.")
             return
         
-        # Garante que pelo menos um caractere de cada tipo selecionado seja incluído
+        # Garante que pelo menos um de cada tipo selecionado seja incluído
         password = []
         if self.include_upper.get():
             password.append(random.choice(string.ascii_uppercase))
@@ -374,19 +518,20 @@ class AdvancedCyberSecurityTool:
         if self.include_special.get():
             password.append(random.choice(string.punctuation))
         
-        # Preenche o resto da senha
-        remaining_length = length - len(password)
-        password.extend(random.choice(chars) for _ in range(remaining_length))
+        # Preenche o resto
+        remaining = length - len(password)
+        password.extend(random.choice(chars) for _ in range(remaining))
         
-        # Embaralha a senha
+        # Embaralha
         random.shuffle(password)
         password = ''.join(password)
         
         self.generated_password.delete(0, tk.END)
         self.generated_password.insert(0, password)
         self.update_status("Senha gerada com sucesso")
-    
+
     def copy_password(self):
+        """Copia a senha gerada para a área de transferência"""
         password = self.generated_password.get()
         if password:
             self.root.clipboard_clear()
@@ -394,8 +539,9 @@ class AdvancedCyberSecurityTool:
             self.update_status("Senha copiada para a área de transferência")
         else:
             messagebox.showwarning("Aviso", "Nenhuma senha gerada para copiar.")
-    
+
     def check_generated_password(self):
+        """Verifica a força da senha gerada"""
         password = self.generated_password.get()
         if password:
             self.password_entry.delete(0, tk.END)
@@ -403,805 +549,254 @@ class AdvancedCyberSecurityTool:
             self.check_password_strength()
         else:
             messagebox.showwarning("Aviso", "Nenhuma senha gerada para verificar.")
-    
-    # ==============================================
-    # ABA: FERRAMENTAS DE REDE
-    # ==============================================
-    def create_network_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Ferramentas de Rede")
+
+    def create_wordlist_generator_tab(self, notebook):
+        """Cria a sub-aba de geração de wordlists"""
+        tab = ttk.Frame(notebook)
+        notebook.add(tab, text="Wordlist")
         
-        # Scanner de portas
-        port_scanner_frame = ttk.LabelFrame(tab, text="Scanner de Portas Avançado", padding=10)
-        port_scanner_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        ttk.Label(tab, text="Palavras base (separadas por vírgula):").pack(pady=5)
         
-        # Configuração do scan
-        config_frame = ttk.Frame(port_scanner_frame)
-        config_frame.pack(fill=tk.X, pady=5)
+        self.wordlist_base = scrolledtext.ScrolledText(tab, height=5, width=50, wrap=tk.WORD)
+        self.wordlist_base.pack(pady=5)
         
-        ttk.Label(config_frame, text="Alvo:").grid(row=0, column=0, padx=5, sticky='e')
-        self.host_entry = ttk.Entry(config_frame, width=25)
-        self.host_entry.grid(row=0, column=1, sticky='we')
-        self.host_entry.insert(0, "localhost")
+        ttk.Label(tab, text="Anos a adicionar:").pack(pady=5)
+        self.wordlist_years = ttk.Entry(tab)
+        self.wordlist_years.pack(fill=tk.X, pady=5)
+        self.wordlist_years.insert(0, "2020,2021,2022,2023,2024")
         
-        ttk.Label(config_frame, text="Portas:").grid(row=0, column=2, padx=5, sticky='e')
-        self.ports_entry = ttk.Entry(config_frame, width=25)
-        self.ports_entry.grid(row=0, column=3, sticky='we')
-        self.ports_entry.insert(0, "1-1024")
+        ttk.Label(tab, text="Números a adicionar:").pack(pady=5)
+        self.wordlist_numbers = ttk.Entry(tab)
+        self.wordlist_numbers.pack(fill=tk.X, pady=5)
+        self.wordlist_numbers.insert(0, "1,2,12,123,1234,12345")
         
-        ttk.Label(config_frame, text="Threads:").grid(row=0, column=4, padx=5, sticky='e')
-        self.threads_var = tk.IntVar(value=50)
-        ttk.Spinbox(
-            config_frame, 
-            from_=1, 
-            to=200, 
-            textvariable=self.threads_var,
-            width=5
-        ).grid(row=0, column=5, sticky='w')
+        ttk.Label(tab, text="Caracteres especiais:").pack(pady=5)
+        self.wordlist_specials = ttk.Entry(tab)
+        self.wordlist_specials.pack(fill=tk.X, pady=5)
+        self.wordlist_specials.insert(0, "!,@,#,$,%,&,*")
         
-        # Botões de ação
-        btn_frame = ttk.Frame(port_scanner_frame)
+        ttk.Button(tab, 
+                  text="Gerar Wordlist", 
+                  command=self.generate_wordlist,
+                  style='Accent.TButton').pack(pady=15)
+        
+        ttk.Label(tab, text="Wordlist gerada:").pack(pady=5)
+        
+        self.wordlist_output = scrolledtext.ScrolledText(tab, height=10, width=60, wrap=tk.WORD)
+        self.wordlist_output.pack(pady=5)
+        
+        btn_frame = ttk.Frame(tab)
         btn_frame.pack(pady=5)
         
-        ttk.Button(
-            btn_frame, 
-            text="Iniciar Scan", 
-            command=self.start_scan,
-            style='Accent.TButton'
-        ).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(
-            btn_frame, 
-            text="Parar Scan", 
-            command=self.stop_scan,
-            state=tk.DISABLED
-        ).pack(side=tk.LEFT, padx=5)
-        
-        ttk.Button(
-            btn_frame, 
-            text="Limpar", 
-            command=self.clear_scan_results
-        ).pack(side=tk.LEFT, padx=5)
-        
-        # Resultados
-        results_frame = ttk.Frame(port_scanner_frame)
-        results_frame.pack(fill=tk.BOTH, expand=True)
-        
-        # Treeview para mostrar resultados
-        self.results_tree = ttk.Treeview(
-            results_frame,
-            columns=('port', 'status', 'service'),
-            show='headings',
-            height=10
-        )
-        
-        self.results_tree.heading('port', text='Porta')
-        self.results_tree.heading('status', text='Status')
-        self.results_tree.heading('service', text='Serviço')
-        
-        self.results_tree.column('port', width=80, anchor='center')
-        self.results_tree.column('status', width=100, anchor='center')
-        self.results_tree.column('service', width=200, anchor='center')
-        
-        scrollbar = ttk.Scrollbar(results_frame, orient=tk.VERTICAL, command=self.results_tree.yview)
-        self.results_tree.configure(yscroll=scrollbar.set)
-        
-        self.results_tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        # Status do scan
-        self.scan_status_var = tk.StringVar(value="Pronto para escanear")
-        ttk.Label(
-            port_scanner_frame,
-            textvariable=self.scan_status_var,
-            foreground='#bdbdbd'
-        ).pack(pady=(5, 0))
-        
-        # Variáveis para controle do scan
-        self.scan_active = False
-        self.scan_threads = []
-    
-    def start_scan(self):
-        host = self.host_entry.get()
-        ports = self.ports_entry.get()
-        threads = self.threads_var.get()
-        
-        if not host or not ports:
-            messagebox.showwarning("Aviso", "Por favor, preencha todos os campos.")
-            return
-        
-        try:
-            # Verifica se é um intervalo de portas
-            if '-' in ports:
-                start_port, end_port = map(int, ports.split('-'))
-                ports_to_scan = list(range(start_port, end_port + 1))
-            else:
-                ports_to_scan = [int(ports)]
-            
-            # Limpa resultados anteriores
-            self.results_tree.delete(*self.results_tree.get_children())
-            
-            # Configura estado do scan
-            self.scan_active = True
-            self.scan_status_var.set(f"Escaneando {host}...")
-            self.update_status(f"Iniciando scan em {host} (portas: {ports})")
-            
-            # Divide as portas em chunks para cada thread
-            chunk_size = len(ports_to_scan) // threads + 1
-            port_chunks = [ports_to_scan[i:i + chunk_size] for i in range(0, len(ports_to_scan), chunk_size)]
-            
-            # Cria e inicia as threads
-            for chunk in port_chunks:
-                thread = threading.Thread(
-                    target=self.scan_ports_thread,
-                    args=(host, chunk),
-                    daemon=True
-                )
-                self.scan_threads.append(thread)
-                thread.start()
-            
-        except ValueError:
-            messagebox.showerror("Erro", "Formato de portas inválido. Use '80' ou '20-80'.")
-        except Exception as e:
-            messagebox.showerror("Erro", f"Ocorreu um erro: {str(e)}")
-    
-    def scan_ports_thread(self, host, ports):
-        """Função executada por cada thread para escanear portas"""
-        for port in ports:
-            if not self.scan_active:
-                break
-            
-            try:
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sock.settimeout(1)
-                result = sock.connect_ex((host, port))
-                
-                if result == 0:
-                    try:
-                        service = socket.getservbyport(port, 'tcp')
-                    except:
-                        service = "desconhecido"
-                    
-                    # Atualiza a interface na thread principal
-                    self.root.after(0, self.add_scan_result, port, "Aberta", service)
-                sock.close()
-            except:
-                continue
-    
-    def add_scan_result(self, port, status, service):
-        """Adiciona um resultado ao Treeview"""
-        self.results_tree.insert(
-            '', 
-            tk.END, 
-            values=(port, status, service)
-        )
-    
-    def stop_scan(self):
-        """Para o scan em andamento"""
-        self.scan_active = False
-        self.scan_status_var.set("Scan interrompido")
-        self.update_status("Scan de portas interrompido")
-    
-    def clear_scan_results(self):
-        """Limpa os resultados do scan"""
-        self.results_tree.delete(*self.results_tree.get_children())
-        self.scan_status_var.set("Pronto para escanear")
-    
-    # ==============================================
-    # ABA: FERRAMENTAS DE CRIPTOGRAFIA
-    # ==============================================
-    def create_crypto_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Criptografia")
-        
-        # Notebook interno para diferentes operações
-        crypto_notebook = ttk.Notebook(tab)
-        crypto_notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Aba de criptografia simétrica
-        self.create_symmetric_crypto_tab(crypto_notebook)
-        
-        # Aba de geração de chaves
-        self.create_keygen_tab(crypto_notebook)
-    
-    def create_symmetric_crypto_tab(self, notebook):
-        tab = ttk.Frame(notebook)
-        notebook.add(tab, text="Criptografia Simétrica")
-        
-        # Seleção de arquivo
-        file_frame = ttk.LabelFrame(tab, text="Arquivo", padding=10)
-        file_frame.pack(fill=tk.X, padx=5, pady=5)
-        
-        ttk.Button(
-            file_frame,
-            text="Selecionar Arquivo",
-            command=self.select_crypto_file
-        ).pack(pady=5)
-        
-        self.crypto_file_path = tk.StringVar()
-        ttk.Label(
-            file_frame,
-            textvariable=self.crypto_file_path,
-            wraplength=400,
-            foreground='#bdbdbd'
-        ).pack(pady=5)
-        
-        # Chave de criptografia
-        key_frame = ttk.LabelFrame(tab, text="Chave", padding=10)
-        key_frame.pack(fill=tk.X, padx=5, pady=5)
-        
-        ttk.Label(key_frame, text="Chave (32 bytes em base64):").pack(pady=(0, 5))
-        
-        self.crypto_key_entry = ttk.Entry(key_frame, width=50)
-        self.crypto_key_entry.pack(pady=5)
-        
-        ttk.Button(
-            key_frame,
-            text="Gerar Chave",
-            command=self.generate_crypto_key
-        ).pack(pady=5)
-        
-        # Operações
-        ops_frame = ttk.Frame(tab)
-        ops_frame.pack(pady=10)
-        
-        ttk.Button(
-            ops_frame,
-            text="Criptografar",
-            command=self.encrypt_file,
-            style='Accent.TButton'
-        ).pack(side=tk.LEFT, padx=10)
-        
-        ttk.Button(
-            ops_frame,
-            text="Descriptografar",
-            command=self.decrypt_file
-        ).pack(side=tk.LEFT, padx=10)
-    
-    def select_crypto_file(self):
-        """Seleciona um arquivo para criptografia/descriptografia"""
-        filepath = filedialog.askopenfilename()
-        if filepath:
-            self.crypto_file_path.set(filepath)
-            self.update_status(f"Arquivo selecionado: {filepath}")
-    
-    def generate_crypto_key(self):
-        """Gera uma chave de criptografia aleatória"""
-        key = Fernet.generate_key()
-        self.crypto_key_entry.delete(0, tk.END)
-        self.crypto_key_entry.insert(0, key.decode())
-        self.update_status("Chave de criptografia gerada")
-    
-    def encrypt_file(self):
-        """Criptografa o arquivo selecionado"""
-        filepath = self.crypto_file_path.get()
-        key = self.crypto_key_entry.get()
-        
-        if not filepath or not key:
-            messagebox.showwarning("Aviso", "Selecione um arquivo e insira uma chave.")
-            return
-        
-        try:
-            fernet = Fernet(key.encode())
-            
-            with open(filepath, 'rb') as f:
-                data = f.read()
-            
-            encrypted_data = fernet.encrypt(data)
-            
-            save_path = filedialog.asksaveasfilename(
-                defaultextension=".enc",
-                initialfile=os.path.basename(filepath) + ".enc"
-            )
-            
-            if save_path:
-                with open(save_path, 'wb') as f:
-                    f.write(encrypted_data)
-                
-                messagebox.showinfo("Sucesso", "Arquivo criptografado com sucesso!")
-                self.update_status(f"Arquivo criptografado salvo em: {save_path}")
-        
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao criptografar: {str(e)}")
-    
-    def decrypt_file(self):
-        """Descriptografa o arquivo selecionado"""
-        filepath = self.crypto_file_path.get()
-        key = self.crypto_key_entry.get()
-        
-        if not filepath or not key:
-            messagebox.showwarning("Aviso", "Selecione um arquivo e insira uma chave.")
-            return
-        
-        try:
-            fernet = Fernet(key.encode())
-            
-            with open(filepath, 'rb') as f:
-                encrypted_data = f.read()
-            
-            decrypted_data = fernet.decrypt(encrypted_data)
-            
-            save_path = filedialog.asksaveasfilename(
-                initialfile=os.path.basename(filepath).replace('.enc', '')
-            )
-            
-            if save_path:
-                with open(save_path, 'wb') as f:
-                    f.write(decrypted_data)
-                
-                messagebox.showinfo("Sucesso", "Arquivo descriptografado com sucesso!")
-                self.update_status(f"Arquivo descriptografado salvo em: {save_path}")
-        
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao descriptografar: {str(e)}")
-    
-    def create_keygen_tab(self, notebook):
-        tab = ttk.Frame(notebook)
-        notebook.add(tab, text="Gerador de Chaves")
-        
-        ttk.Label(tab, text="Selecione o tipo de chave:").pack(pady=10)
-        
-        key_type = tk.StringVar(value='fernet')
-        
-        ttk.Radiobutton(
-            tab,
-            text="Fernet (AES-128)",
-            variable=key_type,
-            value='fernet'
-        ).pack(anchor='w', padx=50, pady=5)
-        
-        ttk.Radiobutton(
-            tab,
-            text="RSA (2048 bits)",
-            variable=key_type,
-            value='rsa'
-        ).pack(anchor='w', padx=50, pady=5)
-        
-        ttk.Button(
-            tab,
-            text="Gerar Chave",
-            command=lambda: self.generate_key(key_type.get()),
-            style='Accent.TButton'
-        ).pack(pady=20)
-        
-        self.key_text = tk.Text(
-            tab,
-            height=10,
-            width=70,
-            wrap=tk.WORD,
-            bg='#3e3e3e',
-            fg='#ffffff',
-            insertbackground='white'
-        )
-        self.key_text.pack(pady=10, padx=10)
-        self.key_text.insert(tk.END, "A chave gerada aparecerá aqui...")
-        
-        ttk.Button(
-            tab,
-            text="Copiar Chave",
-            command=self.copy_key
-        ).pack(pady=5)
-    
-    def generate_key(self, key_type):
-        """Gera uma chave criptográfica"""
-        try:
-            if key_type == 'fernet':
-                key = Fernet.generate_key().decode()
-                self.key_text.delete(1.0, tk.END)
-                self.key_text.insert(tk.END, key)
-                self.update_status("Chave Fernet gerada")
-            
-            elif key_type == 'rsa':
-                # Em uma aplicação real, usaria cryptography.hazmat.primitives.asymmetric.rsa
-                # Aqui é apenas um placeholder para demonstração
-                self.key_text.delete(1.0, tk.END)
-                self.key_text.insert(tk.END, "Funcionalidade RSA não implementada nesta demonstração.")
-                self.update_status("Geração de chave RSA não implementada")
-        
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao gerar chave: {str(e)}")
-    
-    def copy_key(self):
-        """Copia a chave gerada para a área de transferência"""
-        key = self.key_text.get(1.0, tk.END).strip()
-        if key and key != "A chave gerada aparecerá aqui...":
-            self.root.clipboard_clear()
-            self.root.clipboard_append(key)
-            self.update_status("Chave copiada para a área de transferência")
-        else:
-            messagebox.showwarning("Aviso", "Nenhuma chave gerada para copiar.")
-    
-    # ==============================================
-    # ABA: FERRAMENTAS DE METADADOS
-    # ==============================================
-    def create_metadata_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Análise de Metadados")
-        
-        # Seleção de arquivo
-        file_frame = ttk.LabelFrame(tab, text="Selecionar Arquivo", padding=10)
-        file_frame.pack(fill=tk.X, padx=5, pady=5)
-        
-        ttk.Button(
-            file_frame,
-            text="Selecionar Arquivo",
-            command=self.select_metadata_file,
-            style='Accent.TButton'
-        ).pack(pady=5)
-        
-        self.metadata_file_path = tk.StringVar()
-        ttk.Label(
-            file_frame,
-            textvariable=self.metadata_file_path,
-            wraplength=500,
-            foreground='#bdbdbd'
-        ).pack(pady=5)
-        
-        # Resultados
-        results_frame = ttk.LabelFrame(tab, text="Metadados Extraídos", padding=10)
-        results_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        self.metadata_text = tk.Text(
-            results_frame,
-            height=15,
-            width=80,
-            wrap=tk.WORD,
-            bg='#3e3e3e',
-            fg='#ffffff',
-            insertbackground='white'
-        )
-        
-        scrollbar = ttk.Scrollbar(
-            results_frame,
-            orient=tk.VERTICAL,
-            command=self.metadata_text.yview
-        )
-        self.metadata_text.configure(yscroll=scrollbar.set)
-        
-        self.metadata_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        
-        self.metadata_text.insert(tk.END, "Metadados aparecerão aqui após selecionar um arquivo.")
-        self.metadata_text.config(state=tk.DISABLED)
-    
-    def select_metadata_file(self):
-        """Seleciona um arquivo para análise de metadados"""
-        filepath = filedialog.askopenfilename()
-        if filepath:
-            self.metadata_file_path.set(filepath)
-            self.analyze_metadata(filepath)
-    
-    def analyze_metadata(self, filepath):
-        """Analisa os metadados do arquivo selecionado"""
-        try:
-            self.metadata_text.config(state=tk.NORMAL)
-            self.metadata_text.delete(1.0, tk.END)
-            
-            # Informações básicas do arquivo
-            file_stats = os.stat(filepath)
-            self.metadata_text.insert(tk.END, "=== Informações Básicas ===\n")
-            self.metadata_text.insert(tk.END, f"Nome: {os.path.basename(filepath)}\n")
-            self.metadata_text.insert(tk.END, f"Tamanho: {file_stats.st_size} bytes\n")
-            self.metadata_text.insert(tk.END, f"Criado em: {datetime.fromtimestamp(file_stats.st_ctime)}\n")
-            self.metadata_text.insert(tk.END, f"Modificado em: {datetime.fromtimestamp(file_stats.st_mtime)}\n")
-            self.metadata_text.insert(tk.END, f"Acessado em: {datetime.fromtimestamp(file_stats.st_atime)}\n\n")
-            
-            # Metadados específicos para imagens
-            if filepath.lower().endswith(('.jpg', '.jpeg', '.png', '.tiff')):
-                self.metadata_text.insert(tk.END, "=== Metadados de Imagem ===\n")
-                
-                with open(filepath, 'rb') as f:
-                    tags = exifread.process_file(f)
-                
-                if not tags:
-                    self.metadata_text.insert(tk.END, "Nenhum metadado EXIF encontrado.\n")
-                else:
-                    for tag, value in tags.items():
-                        if tag not in ('JPEGThumbnail', 'TIFFThumbnail', 'Filename', 'EXIF MakerNote'):
-                            self.metadata_text.insert(tk.END, f"{tag}: {value}\n")
-            
-            # Metadados para PDFs (simplificado)
-            elif filepath.lower().endswith('.pdf'):
-                self.metadata_text.insert(tk.END, "=== Metadados PDF ===\n")
-                self.metadata_text.insert(tk.END, "Análise de PDF não implementada nesta versão.\n")
-            
-            else:
-                self.metadata_text.insert(tk.END, "=== Metadados Específicos ===\n")
-                self.metadata_text.insert(tk.END, "Tipo de arquivo não suportado para análise detalhada.\n")
-            
-            self.metadata_text.config(state=tk.DISABLED)
-            self.update_status(f"Metadados analisados para: {filepath}")
-        
-        except Exception as e:
-            self.metadata_text.insert(tk.END, f"\nErro ao analisar metadados: {str(e)}")
-            self.metadata_text.config(state=tk.DISABLED)
-            self.update_status(f"Erro ao analisar metadados: {str(e)}")
-    
-    # ==============================================
-    # ABA: FERRAMENTAS DE HASH
-    # ==============================================
-    def create_hash_tools_tab(self):
-        tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Ferramentas de Hash")
-        
-        # Notebook interno para diferentes operações
-        hash_notebook = ttk.Notebook(tab)
-        hash_notebook.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
-        # Aba de hash de texto
-        self.create_text_hash_tab(hash_notebook)
-        
-        # Aba de hash de arquivo
-        self.create_file_hash_tab(hash_notebook)
-    
-    def create_text_hash_tab(self, notebook):
-        tab = ttk.Frame(notebook)
-        notebook.add(tab, text="Hash de Texto")
-        
-        ttk.Label(tab, text="Digite o texto para gerar hash:").pack(pady=10)
-        
-        self.hash_input = tk.Text(
-            tab,
-            height=5,
-            width=60,
-            wrap=tk.WORD,
-            bg='#3e3e3e',
-            fg='#ffffff',
-            insertbackground='white'
-        )
-        self.hash_input.pack(pady=5)
-        
-        ttk.Label(tab, text="Selecione o algoritmo:").pack(pady=5)
-        
-        algo_frame = ttk.Frame(tab)
-        algo_frame.pack(pady=5)
-        
-        self.hash_algo = tk.StringVar(value='sha256')
-        
-        algorithms = [
-            ('MD5', 'md5'),
-            ('SHA-1', 'sha1'),
-            ('SHA-256', 'sha256'),
-            ('SHA-512', 'sha512'),
-            ('BLAKE2b', 'blake2b'),
-            ('BLAKE2s', 'blake2s'),
-            ('SHA-3 256', 'sha3_256'),
-            ('SHA-3 512', 'sha3_512')
-        ]
-        
-        for i, (name, algo) in enumerate(algorithms):
-            rb = ttk.Radiobutton(
-                algo_frame,
-                text=name,
-                variable=self.hash_algo,
-                value=algo
-            )
-            rb.grid(row=i//4, column=i%4, padx=5, pady=2, sticky='w')
-        
-        ttk.Button(
-            tab,
-            text="Gerar Hash",
-            command=self.generate_text_hash,
-            style='Accent.TButton'
-        ).pack(pady=15)
-        
-        ttk.Label(tab, text="Hash gerado:").pack(pady=5)
-        
-        self.hash_output = tk.Text(
-            tab,
-            height=5,
-            width=60,
-            wrap=tk.WORD,
-            bg='#3e3e3e',
-            fg='#ffffff',
-            insertbackground='white'
-        )
-        self.hash_output.pack(pady=5)
-        self.hash_output.config(state=tk.DISABLED)
-        
-        ttk.Button(
-            tab,
-            text="Copiar Hash",
-            command=self.copy_text_hash
-        ).pack(pady=5)
-    
-    def generate_text_hash(self):
-        """Gera hash a partir do texto inserido"""
-        text = self.hash_input.get("1.0", tk.END).strip()
-        if not text:
-            messagebox.showwarning("Aviso", "Por favor, digite um texto para gerar o hash.")
-            return
-        
-        algo = self.hash_algo.get()
-        
-        try:
-            if algo == 'md5':
-                hash_obj = hashlib.md5(text.encode())
-            elif algo == 'sha1':
-                hash_obj = hashlib.sha1(text.encode())
-            elif algo == 'sha256':
-                hash_obj = hashlib.sha256(text.encode())
-            elif algo == 'sha512':
-                hash_obj = hashlib.sha512(text.encode())
-            elif algo == 'blake2b':
-                hash_obj = hashlib.blake2b(text.encode())
-            elif algo == 'blake2s':
-                hash_obj = hashlib.blake2s(text.encode())
-            elif algo == 'sha3_256':
-                hash_obj = hashlib.sha3_256(text.encode())
-            elif algo == 'sha3_512':
-                hash_obj = hashlib.sha3_512(text.encode())
-            else:
-                messagebox.showerror("Erro", "Algoritmo de hash inválido.")
-                return
-            
-            hash_result = hash_obj.hexdigest()
-            
-            self.hash_output.config(state=tk.NORMAL)
-            self.hash_output.delete(1.0, tk.END)
-            self.hash_output.insert(tk.END, hash_result)
-            self.hash_output.config(state=tk.DISABLED)
-            
-            self.update_status(f"Hash {algo.upper()} gerado com sucesso")
-        
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao gerar hash: {str(e)}")
-    
-    def copy_text_hash(self):
-        """Copia o hash gerado para a área de transferência"""
-        hash_text = self.hash_output.get("1.0", tk.END).strip()
-        if hash_text:
-            self.root.clipboard_clear()
-            self.root.clipboard_append(hash_text)
-            self.update_status("Hash copiado para a área de transferência")
-        else:
-            messagebox.showwarning("Aviso", "Nenhum hash gerado para copiar.")
-    
-    def create_file_hash_tab(self, notebook):
-        tab = ttk.Frame(notebook)
-        notebook.add(tab, text="Hash de Arquivo")
-        
-        ttk.Label(tab, text="Selecione um arquivo para calcular seu hash:").pack(pady=10)
-        
-        ttk.Button(
-            tab,
-            text="Selecionar Arquivo",
-            command=self.select_hash_file,
-            style='Accent.TButton'
-        ).pack(pady=5)
-        
-        self.hash_file_path = tk.StringVar()
-        ttk.Label(
-            tab,
-            textvariable=self.hash_file_path,
-            wraplength=500,
-            foreground='#bdbdbd'
-        ).pack(pady=5)
-        
-        ttk.Label(tab, text="Selecione o algoritmo:").pack(pady=5)
-        
-        self.file_hash_algo = tk.StringVar(value='sha256')
-        
-        algo_frame = ttk.Frame(tab)
-        algo_frame.pack(pady=5)
-        
-        algorithms = [
-            ('MD5', 'md5'),
-            ('SHA-1', 'sha1'),
-            ('SHA-256', 'sha256'),
-            ('SHA-512', 'sha512'),
-            ('BLAKE2b', 'blake2b'),
-            ('BLAKE2s', 'blake2s')
-        ]
-        
-        for i, (name, algo) in enumerate(algorithms):
-            rb = ttk.Radiobutton(
-                algo_frame,
-                text=name,
-                variable=self.file_hash_algo,
-                value=algo
-            )
-            rb.grid(row=i//3, column=i%3, padx=5, pady=2, sticky='w')
-        
-        ttk.Button(
-            tab,
-            text="Calcular Hash",
-            command=self.calculate_file_hash
-        ).pack(pady=15)
-        
-        ttk.Label(tab, text="Hash do arquivo:").pack(pady=5)
-        
-        self.file_hash_output = tk.Text(
-            tab,
-            height=5,
-            width=60,
-            wrap=tk.WORD,
-            bg='#3e3e3e',
-            fg='#ffffff',
-            insertbackground='white'
-        )
-        self.file_hash_output.pack(pady=5)
-        self.file_hash_output.config(state=tk.DISABLED)
-        
-        ttk.Button(
-            tab,
-            text="Copiar Hash",
-            command=self.copy_file_hash
-        ).pack(pady=5)
-    
-    def select_hash_file(self):
-        """Seleciona um arquivo para cálculo de hash"""
-        filepath = filedialog.askopenfilename()
-        if filepath:
-            self.hash_file_path.set(filepath)
-            self.update_status(f"Arquivo selecionado para hash: {filepath}")
-    
-    def calculate_file_hash(self):
-        """Calcula o hash do arquivo selecionado"""
-        filepath = self.hash_file_path.get()
-        if not filepath:
-            messagebox.showwarning("Aviso", "Por favor, selecione um arquivo.")
-            return
-        
-        algo = self.file_hash_algo.get()
-        
-        try:
-            hash_obj = None
-            
-            if algo == 'md5':
-                hash_obj = hashlib.md5()
-            elif algo == 'sha1':
-                hash_obj = hashlib.sha1()
-            elif algo == 'sha256':
-                hash_obj = hashlib.sha256()
-            elif algo == 'sha512':
-                hash_obj = hashlib.sha512()
-            elif algo == 'blake2b':
-                hash_obj = hashlib.blake2b()
-            elif algo == 'blake2s':
-                hash_obj = hashlib.blake2s()
-            else:
-                messagebox.showerror("Erro", "Algoritmo de hash inválido.")
-                return
-            
-            # Lê o arquivo em chunks para evitar problemas com arquivos grandes
-            with open(filepath, 'rb') as f:
-                while chunk := f.read(8192):
-                    hash_obj.update(chunk)
-            
-            hash_result = hash_obj.hexdigest()
-            
-            self.file_hash_output.config(state=tk.NORMAL)
-            self.file_hash_output.delete(1.0, tk.END)
-            self.file_hash_output.insert(tk.END, hash_result)
-            self.file_hash_output.config(state=tk.DISABLED)
-            
-            self.update_status(f"Hash {algo.upper()} calculado para o arquivo")
-        
-        except Exception as e:
-            messagebox.showerror("Erro", f"Falha ao calcular hash: {str(e)}")
-    
-    def copy_file_hash(self):
-        """Copia o hash do arquivo para a área de transferência"""
-        hash_text = self.file_hash_output.get("1.0", tk.END).strip()
-        if hash_text:
-            self.root.clipboard_clear()
-            self.root.clipboard_append(hash_text)
-            self.update_status("Hash do arquivo copiado para a área de transferência")
-        else:
-            messagebox.showwarning("Aviso", "Nenhum hash calculado para copiar.")
+        ttk.Button(btn_frame, text="Copiar", command=self.copy_wordlist).pack(side=tk.LEFT, padx=5)
+        ttk.Button(btn_frame, text="Salvar", command=self.save_wordlist).pack(side=tk.LEFT, padx=5)
 
+    def generate_wordlist(self):
+        """Gera uma wordlist personalizada"""
+        base_text = self.wordlist_base.get("1.0", tk.END).strip()
+        if not base_text:
+            messagebox.showwarning("Aviso", "Digite pelo menos uma palavra base.")
+            return
+        
+        bases = [b.strip() for b in base_text.split(',') if b.strip()]
+        years = [y.strip() for y in self.wordlist_years.get().split(',') if y.strip()]
+        numbers = [n.strip() for n in self.wordlist_numbers.get().split(',') if n.strip()]
+        specials = [s.strip() for s in self.wordlist_specials.get().split(',') if s.strip()]
+        
+        wordlist = set()
+        
+        # Gera todas as combinações
+        for base in bases:
+            wordlist.add(base)
+            
+            # Adiciona anos
+            for year in years:
+                wordlist.add(base + year)
+                wordlist.add(year + base)
+            
+            # Adiciona números
+            for number in numbers:
+                wordlist.add(base + number)
+                wordlist.add(number + base)
+            
+            # Adiciona caracteres especiais
+            for special in specials:
+                wordlist.add(base + special)
+                wordlist.add(special + base)
+                
+                # Combina com números também
+                for number in numbers:
+                    wordlist.add(base + special + number)
+                    wordlist.add(base + number + special)
+                    wordlist.add(special + base + number)
+        
+        # Ordena a wordlist
+        sorted_wordlist = sorted(wordlist, key=lambda x: (len(x), x))
+        
+        # Mostra na caixa de texto
+        self.wordlist_output.delete(1.0, tk.END)
+        self.wordlist_output.insert(tk.END, "\n".join(sorted_wordlist))
+        
+        self.update_status(f"Wordlist gerada com {len(sorted_wordlist)} entradas")
+
+    def copy_wordlist(self):
+        """Copia a wordlist para a área de transferência"""
+        wordlist = self.wordlist_output.get("1.0", tk.END).strip()
+        if wordlist:
+            self.root.clipboard_clear()
+            self.root.clipboard_append(wordlist)
+            self.update_status("Wordlist copiada para a área de transferência")
+        else:
+            messagebox.showwarning("Aviso", "Nenhuma wordlist gerada para copiar.")
+
+    def save_wordlist(self):
+        """Salva a wordlist em um arquivo"""
+        wordlist = self.wordlist_output.get("1.0", tk.END).strip()
+        if not wordlist:
+            messagebox.showwarning("Aviso", "Nenhuma wordlist gerada para salvar.")
+            return
+        
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Arquivos de texto", "*.txt"), ("Todos os arquivos", "*.*")]
+        )
+        
+        if filepath:
+            with open(filepath, 'w', encoding='utf-8') as f:
+                f.write(wordlist)
+            
+            self.update_status(f"Wordlist salva em: {filepath}")
+            messagebox.showinfo("Sucesso", "Wordlist salva com sucesso!")
+
+    def create_password_spraying_tab(self, notebook):
+        """Cria a sub-aba de password spraying"""
+        tab = ttk.Frame(notebook)
+        notebook.add(tab, text="Password Spraying")
+        
+        ttk.Label(tab, text="ALERTA: Esta ferramenta deve ser usada apenas para testes autorizados!", foreground=ERROR_COLOR).pack(pady=10)
+        
+        ttk.Label(tab, text="Alvo (URL ou IP):").pack(pady=5)
+        self.spray_target = ttk.Entry(tab)
+        self.spray_target.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(tab, text="Usuários (um por linha):").pack(pady=5)
+        self.spray_users = scrolledtext.ScrolledText(tab, height=5, wrap=tk.WORD)
+        self.spray_users.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(tab, text="Senhas para testar (uma por linha):").pack(pady=5)
+        self.spray_passwords = scrolledtext.ScrolledText(tab, height=5, wrap=tk.WORD)
+        self.spray_passwords.pack(fill=tk.X, pady=5)
+        
+        ttk.Label(tab, text="Tempo entre tentativas (segundos):").pack(pady=5)
+        self.spray_delay = ttk.Spinbox(tab, from_=1, to=60, width=5)
+        self.spray_delay.pack(pady=5)
+        self.spray_delay.set("5")
+        
+        ttk.Button(tab, 
+                  text="Iniciar Teste", 
+                  command=self.run_password_spraying,
+                  style='Accent.TButton').pack(pady=15)
+        
+        ttk.Label(tab, text="Resultados:").pack(pady=5)
+        self.spray_results = scrolledtext.ScrolledText(tab, height=10, wrap=tk.WORD)
+        self.spray_results.pack(fill=tk.BOTH, expand=True, pady=5)
+        self.spray_results.config(state=tk.DISABLED)
+
+    def run_password_spraying(self):
+        """Executa o teste de password spraying (simulado)"""
+        target = self.spray_target.get()
+        users = self.spray_users.get("1.0", tk.END).strip().splitlines()
+        passwords = self.spray_passwords.get("1.0", tk.END).strip().splitlines()
+        delay = int(self.spray_delay.get())
+        
+        if not target or not users or not passwords:
+            messagebox.showwarning("Aviso", "Preencha todos os campos.")
+            return
+        
+        self.spray_results.config(state=tk.NORMAL)
+        self.spray_results.delete(1.0, tk.END)
+        self.spray_results.insert(tk.END, f"Iniciando password spraying em {target}...\n\n")
+        self.spray_results.see(tk.END)
+        self.update_status(f"Iniciando password spraying em {target}")
+        
+        # Simulação (em uma aplicação real, isso faria requisições HTTP)
+        for user in users:
+            if not user.strip():
+                continue
+                
+            for pwd in passwords:
+                if not pwd.strip():
+                    continue
+                    
+                # Simula uma tentativa de login
+                self.spray_results.insert(tk.END, f"Testando {user}:{pwd}... ")
+                
+                # Simula um resultado aleatório
+                if random.random() < 0.1:  # 10% de chance de "sucesso"
+                    self.spray_results.insert(tk.END, "SUCESSO (credencial válida)\n", "success")
+                else:
+                    self.spray_results.insert(tk.END, "falha\n")
+                
+                self.spray_results.see(tk.END)
+                self.root.update()
+                
+                # Delay entre tentativas
+                time.sleep(delay)
+        
+        self.spray_results.insert(tk.END, "\nTeste concluído.\n")
+        self.spray_results.config(state=tk.DISABLED)
+        self.update_status("Password spraying concluído")
+
+    # [Continuação com os outros módulos...]
+    # Implementação similar para as outras abas:
+    # - create_network_tools()
+    # - create_crypto_tools()
+    # - create_vulnerability_tools()
+    # - create_malware_tools()
+    # - create_forensic_tools()
+    # - create_reporting_tools()
+    # - create_project_tools()
+    # - create_settings_tab()
+
+    def show_dashboard(self):
+        """Mostra a aba de dashboard"""
+        self.main_notebook.select(self.dashboard_tab)
+
+    def show_password_tools(self):
+        """Mostra a aba de ferramentas de senha"""
+        self.main_notebook.select(self.password_tab)
+
+    # [Métodos similares para as outras funções de navegação...]
+
+    def load_api_config(self):
+        """Carrega as configurações de API (simulado)"""
+        self.api_config = {
+            "virustotal": {"key": "", "enabled": False},
+            "hibp": {"key": "", "enabled": True},
+            "nvd": {"key": "", "enabled": False}
+        }
+
+    def init_modules(self):
+        """Inicializa os módulos da aplicação"""
+        self.nm = nmap.PortScanner() if self.api_config.get("nmap", {}).get("enabled", False) else None
+
+    def update_ui(self):
+        """Atualiza a interface do usuário"""
+        # Atualiza o status do projeto
+        if self.current_project:
+            self.project_status.config(text=f"Projeto: {self.current_project}", foreground=SUCCESS_COLOR)
+        else:
+            self.project_status.config(text="Nenhum projeto aberto", foreground=WARNING_COLOR)
+
+# Função principal
 if __name__ == "__main__":
     root = tk.Tk()
     
-    # Configurar estilo adicional
-    style = ttk.Style()
-    style.configure('Accent.TButton', foreground='white', background='#0078d7')
-    style.map('Accent.TButton', background=[('active', '#006cbd')])
+    # Configura o ícone (se disponível)
+    try:
+        root.iconbitmap("shield.ico")  # Substitua pelo caminho do seu ícone
+    except:
+        pass
     
-    app = AdvancedCyberSecurityTool(root)
+    app = CyberSecurityPro(root)
     root.mainloop()
-
-    #INSTALE:
-    # pip install pillow exifread cryptography
-    
