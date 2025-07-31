@@ -28,7 +28,6 @@ if($idCliente && is_numeric($idCliente)) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atualizar Cliente</title>
-    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script>
         function habilitarEdicao(campo) {
@@ -37,7 +36,6 @@ if($idCliente && is_numeric($idCliente)) {
     </script>   
 </head>
 <body>
-    <!-- Barra de Navegação -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
@@ -53,6 +51,7 @@ if($idCliente && is_numeric($idCliente)) {
                             <li><a class="dropdown-item" href="home.php">Página Inicial</a></li>
                             <li><a class="dropdown-item" href="inserirCliente.php">Cadastrar Clientes</a></li>
                             <li><a class="dropdown-item" href="listarClientes.php">Lista de Clientes</a></li>
+                            <li><a class="dropdown-item" href="pesquisarCliente.php">Pesquisar Clientes</a></li>
                             <li><a class="dropdown-item" href="deletarCliente.php">Deletar Clientes</a></li>
                         </ul>
                     </li>
@@ -117,8 +116,11 @@ if($idCliente && is_numeric($idCliente)) {
             </div>
         </div>
     </div>
-
-    <!-- Bootstrap JS -->
+    <div>
+    <adress>
+        <center>Raquel Fernandes- Estudante- Técnico de Desenvolvimento de Sistemas</center>
+    </adress>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

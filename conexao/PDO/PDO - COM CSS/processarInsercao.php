@@ -16,7 +16,16 @@ if($_SERVER["REQUEST_METHOD"] =="POST") {
 
     try {
         $stmt->execute();
-        echo "Cliente cadastrado com sucesso!";
+        echo "<script>alert('Cliente Cadastrado com sucesso!') 
+        let escolha = confirm('Deseja retornar para a página de cadastro?');
+        if(escolha) {
+        alert('Retornando para a página de cadastro...');
+        window.location.href = 'inserirCliente.php';
+        } else {
+         alert('Retornando para  a página inicial...');
+        window.location.href = 'home.php';
+        }
+        </script>";
     } catch (PDOException $e) {
         error_log("Erro ao inserir cliente: ".$e->getMessage());
         echo "Erro ao cadastrar cliente";

@@ -25,9 +25,25 @@ if($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         $stmt->execute();
-        echo "Cliente atualizado com sucesso!";
+        echo "<script>alert('Cliente Atualizado com sucesso!') 
+        let escolha = confirm('Deseja retornar para a página de Atualizar Clientes?');
+        if(escolha) {
+        alert('Retornando para a página de Atualizar Clientes...');
+        window.location.href = 'atualizarCliente.php';
+        } else {
+         alert('Retornando para a página inicial...');
+        window.location.href = 'home.php';
+        }
+        </script>";
     } catch (PDOException $e) {
         error_log("Erro ao atualizar cliente ". $e->getMessage());
         echo "Erro ao atualizar registro";
     }
 }
+
+?>
+<div>
+<adress>
+    <center>Raquel Fernandes- Estudante- Técnico de Desenvolvimento de Sistemas</center>
+</adress>
+</div>

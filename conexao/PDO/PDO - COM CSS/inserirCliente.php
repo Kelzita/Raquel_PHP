@@ -22,6 +22,7 @@
                             <li><a class="dropdown-item" href="home.php">Página Inicial</a></li>
                             <li><a class="dropdown-item" href="atualizarCliente.php">Alterar Clientes</a></li>
                             <li><a class="dropdown-item" href="listarClientes.php">Lista de Clientes</a></li>
+                            <li><a class="dropdown-item" href="pesquisarCliente.php">Pesquisar Clientes</a></li>
                             <li><a class="dropdown-item" href="deletarCliente.php">Deletar Clientes</a></li>
                         </ul>
                     </li>
@@ -60,6 +61,11 @@
                 </form>
             </div>
         </div>
+    </div>
+    <div>
+    <adress>
+        <center>Raquel Fernandes- Estudante- Técnico de Desenvolvimento de Sistemas</center>
+    </adress>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

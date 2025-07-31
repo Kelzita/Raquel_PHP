@@ -16,10 +16,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     try {
         $stmt->execute();
-        echo "Cliente excluído com sucesso!";
+        echo "<script>alert('Cliente Excluído com sucesso!') 
+        let escolha = confirm('Deseja retornar para a página de exclusão?');
+        if(escolha) {
+        alert('Retornando para a página de exclusão...');
+        window.location.href = 'deletarCliente.php';
+        } else {
+         alert('Retornando para a página inicial...');
+        window.location.href = 'home.php';
+        }
+        </script>";
     } catch (PDOException $e) {
         error_log("Erro ao excluir cliente: " . $e->getMessage());
         echo "Erro ao excluir cliente";
     }
 }
 ?>
+
+<div>
+    <adress>
+        <center>Raquel Fernandes- Estudante- Técnico de Desenvolvimento de Sistemas</center>
+</adress> </div>
