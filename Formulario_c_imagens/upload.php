@@ -25,9 +25,9 @@ $queryInsercao = "INSERT INTO tabela_imagens(evento,descricao,nome_imagem,tamanh
 $resultado = mysqli_query($conexao, $queryInsercao);
 
 //Verifica se a inserção foi bem sucedidada 
-if(resultado) {
+if($resultado) {
     echo 'Registro inserido com sucesso!';
-    header('Location: index.php');
+    header("Location: index.php");
     exit();
 }  else {
     die("Erro ao inserir no banco" . mysqli_error($conexao));
