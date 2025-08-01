@@ -3,3 +3,5 @@
     $usuario = "root";
     $senha = "";
     $banco = "empresa";
+
+    ?>
