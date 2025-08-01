@@ -11,7 +11,7 @@ $nome = $_FILES['imagem']['name'];
 
 //Verifica se o arquivo foi enviado corretamente
 
-if(!empty($imagem) && ($tamanho > 0)) {
+if(!empty($imagem) && $tamanho > 0) {
     //le o conteúdo do Arquivo
     $fp = fopen($imagem, "rb");
     $conteudo = fread($fp, filesize($imagem));
