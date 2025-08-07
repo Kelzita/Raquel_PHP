@@ -8,8 +8,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>Cadastro</h1>
-        <h2>Funcionário</h2>
+        <h1>Cadastro Funcionário</h1>
     <!-- Formulário para cadastrar um funcionário-->
      <form action="salvar_funcionario.php" method="POST" enctype="multipart/form-data">
         <!--Campo para inserir o nome do funcionário-->
@@ -25,8 +24,18 @@
         <label for="foto">Foto:</label>
         <input type="file"name="foto" id="foto" required></input>
 
-        <button type="submit">Cadastrar</button>
+        <button class="botao" type="submit">Cadastrar</button>
     </div>
-</form>   
+</form>  
+<br>
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+<br><br><br><br><br><br>
+
+   <adress align="center">
+      <i>Raquel Fernandes - Estudante - Técnico de desenvolvimento de sistemas</i>
+</adress> 
 </body>
 </html>
